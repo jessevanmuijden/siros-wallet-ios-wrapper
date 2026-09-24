@@ -89,6 +89,7 @@
 		A08D82802DA91AE6009373AB /* Errors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
 		A08D82832DA93BE4009373AB /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = SOURCE_ROOT; };
 		A090AC232F642E4F00ADE0B2 /* wwWalletTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = wwWalletTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0918949306528E80089AD5C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		A093B0062FB4BEB600FE09F2 /* WebAuthn.User+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WebAuthn.User+Extensions.swift"; sourceTree = "<group>"; };
 		A099D3792DB69750007F6983 /* WKUserScript+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WKUserScript+Extensions.swift"; sourceTree = "<group>"; };
 		A099D37B2DB69A71007F6983 /* MessageHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageHandler.swift; sourceTree = "<group>"; };
@@ -239,6 +240,7 @@
 		A08D82822DA93BC0009373AB /* Build */ = {
 			isa = PBXGroup;
 			children = (
+				A0918949306528E80089AD5C /* README.md */,
 				A031F7052F8D380300EE5ACF /* CHANGELOG.md */,
 				A04B0A002DD2035C00A1BFF7 /* Config.xcconfig */,
 				A08D82832DA93BE4009373AB /* .gitignore */,
