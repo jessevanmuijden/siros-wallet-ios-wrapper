@@ -310,7 +310,22 @@ import FaceTecSDK
             throw Errors.faceTecNotAvailable
         }
 
-        let credentialOfferURI = try await provider.startVerification(presentingViewController: presentingVc)
+        // The web app ignores this call's result, so an error the user can act
+        // on is shown natively; anything else is only thrown, as before.
+        guard provider.isNFCReadingAvailable() else {
+            await showAlert(Errors.faceTecNFCUnavailable, on: presentingVc)
+            throw Errors.faceTecNFCUnavailable
+        }
+
+        let credentialOfferURI: String
+        do {
+            credentialOfferURI = try await provider.startVerification(presentingViewController: presentingVc)
+        }
+        catch Errors.faceTecIssuanceRefused(let code) {
+            let error = Errors.faceTecIssuanceRefused(code: code)
+            await showAlert(error, on: presentingVc, title: NSLocalizedString("No credential issued", comment: ""))
+            throw error
+        }
 
         // wallet-frontend's UriHandlerProvider expects the credential offer's
         // query string to arrive at its tenant-scoped `cb` route — it detects
@@ -348,6 +363,21 @@ import FaceTecSDK
 
         throw Errors.faceTecNotAvailable
 #endif
+    }
+
+    /// Presents `error` as a simple alert on top of `viewController` (or
+    /// whatever it is currently presenting, e.g. the FaceTec session's
+    /// dismissing UI) and waits until the user dismisses it.
+    @MainActor
+    private func showAlert(_ error: Errors, on viewController: UIViewController, title: String? = nil) async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            let alert = UIAlertController(title: title, message: error.localizedDescription, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default) { _ in
+                continuation.resume()
+            })
+
+            viewController.top.present(alert, animated: true)
+        }
     }
 
     func loginStatusChanged(_ message: WKScriptMessage) async throws {

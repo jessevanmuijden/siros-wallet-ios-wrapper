@@ -15,6 +15,7 @@
 import Foundation
 import UIKit
 import OSLog
+import CoreNFC
 #if canImport(FaceTecSDK)
 import FaceTecSDK
 
@@ -47,6 +48,15 @@ final class FaceTecIDVProvider: @unchecked Sendable {
     /// shape callers expect from other IDV providers.
     func isAvailable() -> Bool {
         true
+    }
+
+    /// Whether this device can read the document's NFC chip. facetec-api
+    /// issues nothing without an authenticated chip read
+    /// (sirosfoundation/facetec-api#65), so on a device that cannot, the
+    /// scan is not worth starting. iOS has no user-facing NFC switch, so
+    /// this is purely a hardware question.
+    func isNFCReadingAvailable() -> Bool {
+        NFCTagReaderSession.readingAvailable
     }
 
     /// Presents the FaceTec capture UI on `presentingViewController` and
@@ -106,6 +116,10 @@ final class FaceTecIDVProvider: @unchecked Sendable {
         }
 
         guard let credentialOfferURI = processor.credentialOfferURI else {
+            if let code = processor.credentialIssueErrCode {
+                log.info("facetec-api issued no credential: credentialIssueErrCode=\(code)")
+                throw Errors.faceTecIssuanceRefused(code: code)
+            }
             throw Errors.faceTecNoCredentialOffer
         }
 
@@ -140,6 +154,10 @@ private final class FaceTecPhotoIDMatchProcessor: NSObject, FaceTecSessionReques
     private let log: Logger
 
     private(set) var credentialOfferURI: String?
+
+    /// Set when the scan completed but facetec-api refused to issue, e.g.
+    /// because the document's chip was not read and authenticated.
+    private(set) var credentialIssueErrCode: String?
 
     private var exitContinuation: CheckedContinuation<FaceTecSessionStatus, Never>?
 
@@ -222,6 +240,10 @@ private final class FaceTecPhotoIDMatchProcessor: NSObject, FaceTecSessionReques
 
                 if let offerURI = json["credentialOfferURI"] as? String, !offerURI.isEmpty {
                     credentialOfferURI = offerURI
+                }
+
+                if let errCode = json["credentialIssueErrCode"] as? String, !errCode.isEmpty {
+                    credentialIssueErrCode = errCode
                 }
 
                 sessionRequestCallback.processResponse(responseBlob)
