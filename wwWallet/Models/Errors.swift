@@ -23,7 +23,7 @@ enum Errors: LocalizedError {
     case faceTecInitializationFailed
     case faceTecNFCUnavailable
     /// The scan completed, but facetec-api issued no credential and said why
-    /// in `credentialIssueErrCode`.
+    /// in `credentialIssueErrorCode`.
     case faceTecIssuanceRefused(code: String)
 
     var localizedDescription: String {
@@ -66,8 +66,8 @@ enum Errors: LocalizedError {
 
         case .faceTecIssuanceRefused(let code):
             switch code {
-            case "nfc_not_supported_by_document":
-                return NSLocalizedString("This document has no chip that can be read. Please use an e-passport or an ID card with a chip.", comment: "")
+            case "nfc_not_requested":
+                return NSLocalizedString("This document cannot be verified by its chip. Please use an e-passport or an ID card whose chip can be read.", comment: "")
 
             case "nfc_device_not_capable":
                 return NSLocalizedString("This device could not read the chip. Please try again.", comment: "")

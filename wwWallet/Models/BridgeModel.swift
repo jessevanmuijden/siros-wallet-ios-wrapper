@@ -365,18 +365,40 @@ import FaceTecSDK
 #endif
     }
 
-    /// Presents `error` as a simple alert on top of `viewController` (or
-    /// whatever it is currently presenting, e.g. the FaceTec session's
-    /// dismissing UI) and waits until the user dismisses it.
+    /// Presents `error` as a simple alert and waits until the user dismisses
+    /// it. The bridge call waits on this, so it must always return.
+    ///
+    /// `viewController` is the one that presented the FaceTec session, which
+    /// may still be dismissing when `onFaceTecExit` fires; UIKit refuses to
+    /// present from a controller in that state. So this waits (bounded) for
+    /// the dismissal to finish and presents from whatever is then on top; if
+    /// UIKit still refuses, it gives up rather than leave the call suspended.
     @MainActor
     private func showAlert(_ error: Errors, on viewController: UIViewController, title: String? = nil) async {
+        var waited = 0
+        while viewController.presentedViewController?.isBeingDismissed == true, waited < 30 {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            waited += 1
+        }
+
+        let once = AlertContinuation()
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            once.continuation = continuation
+
             let alert = UIAlertController(title: title, message: error.localizedDescription, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default) { _ in
-                continuation.resume()
+                once.resume()
             })
 
             viewController.top.present(alert, animated: true)
+
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                if alert.presentingViewController == nil {
+                    self.log.error("Could not present the FaceTec refusal alert: \(error.localizedDescription)")
+                    once.resume()
+                }
+            }
         }
     }
 
@@ -422,5 +444,17 @@ import FaceTecSDK
                 continuation.resume(returning: nil)
             }
         }
+    }
+}
+
+/// Resumes a continuation at most once, from whichever of the alert's OK
+/// button or its presentation check gets there first.
+@MainActor
+private final class AlertContinuation {
+    var continuation: CheckedContinuation<Void, Never>?
+
+    func resume() {
+        continuation?.resume()
+        continuation = nil
     }
 }

@@ -116,8 +116,8 @@ final class FaceTecIDVProvider: @unchecked Sendable {
         }
 
         guard let credentialOfferURI = processor.credentialOfferURI else {
-            if let code = processor.credentialIssueErrCode {
-                log.info("facetec-api issued no credential: credentialIssueErrCode=\(code)")
+            if let code = processor.credentialIssueErrorCode {
+                log.info("facetec-api issued no credential: credentialIssueErrorCode=\(code)")
                 throw Errors.faceTecIssuanceRefused(code: code)
             }
             throw Errors.faceTecNoCredentialOffer
@@ -157,7 +157,7 @@ private final class FaceTecPhotoIDMatchProcessor: NSObject, FaceTecSessionReques
 
     /// Set when the scan completed but facetec-api refused to issue, e.g.
     /// because the document's chip was not read and authenticated.
-    private(set) var credentialIssueErrCode: String?
+    private(set) var credentialIssueErrorCode: String?
 
     private var exitContinuation: CheckedContinuation<FaceTecSessionStatus, Never>?
 
@@ -242,8 +242,8 @@ private final class FaceTecPhotoIDMatchProcessor: NSObject, FaceTecSessionReques
                     credentialOfferURI = offerURI
                 }
 
-                if let errCode = json["credentialIssueErrCode"] as? String, !errCode.isEmpty {
-                    credentialIssueErrCode = errCode
+                if let errorCode = json["credentialIssueErrorCode"] as? String, !errorCode.isEmpty {
+                    credentialIssueErrorCode = errorCode
                 }
 
                 sessionRequestCallback.processResponse(responseBlob)
