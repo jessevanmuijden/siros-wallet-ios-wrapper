@@ -81,6 +81,9 @@ enum Errors: LocalizedError {
             case "nfc_not_authenticated":
                 return NSLocalizedString("The chip in your document could not be verified, so no credential was issued.", comment: "")
 
+            case "chip_untrusted":
+                return NSLocalizedString("The chip in your document could not be confirmed as issued by a recognised authority, so no credential was issued.", comment: "")
+
             default:
                 return NSLocalizedString("Your identity could not be verified, so no credential was issued. Please try again.", comment: "")
             }
